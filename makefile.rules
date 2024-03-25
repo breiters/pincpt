@@ -1,0 +1,56 @@
+CXX           := g++
+TOOL_ROOTS    := pincpt
+TOOL_CXXFLAGS += -std=c++14 -latomic
+TOOL_CXXFLAGS += -DNDEBUG
+
+# ================================================================
+# Build the intermediate object files for pincpt.
+# ================================================================
+$(OBJDIR)pincpt$(OBJ_SUFFIX): pincpt.cpp config.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)datastructs$(OBJ_SUFFIX): datastructs.cpp datastructs.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)cachesim$(OBJ_SUFFIX): cachesim.cpp cachesim.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)bucket$(OBJ_SUFFIX): bucket.cpp bucket.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)region$(OBJ_SUFFIX): region.cpp region.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)imgload$(OBJ_SUFFIX): imgload.cpp imgload.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)mcslock$(OBJ_SUFFIX): mcslock.cpp mcslock.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+$(OBJDIR)debug_reader$(OBJ_SUFFIX): debug_reader.cpp debug_reader.h
+	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
+
+# ================================================================
+# Build the pincpt tool as a dll (shared object).
+# ================================================================
+$(OBJDIR)pincpt$(PINTOOL_SUFFIX): \
+		$(OBJDIR)datastructs$(OBJ_SUFFIX) \
+		$(OBJDIR)cachesim$(OBJ_SUFFIX) \
+		$(OBJDIR)pincpt$(OBJ_SUFFIX) \
+		$(OBJDIR)bucket$(OBJ_SUFFIX) \
+		$(OBJDIR)region$(OBJ_SUFFIX) \
+		$(OBJDIR)mcslock$(OBJ_SUFFIX) \
+		$(OBJDIR)debug_reader$(OBJ_SUFFIX) \
+		$(OBJDIR)imgload$(OBJ_SUFFIX)
+	$(LINKER) $(TOOL_LDFLAGS_NOOPT) $(LINK_EXE)$@ $(^:%.h=) $(TOOL_LPATHS) $(TOOL_LIBS)
+
+# TODO:
+cleandir:
+	rm -f pincpt *~
+
+install: install_pincpt_wrapper
+
+install_pincpt_wrapper:
+	echo "time \$$PIN_ROOT/pin -xyzzy -ifeellucky -t $$PWD/obj-intel64/pincpt.so \$$*" > pincpt
+	cp pincpt ~/bin/ && chmod 755 ~/bin/pincpt
+
